@@ -4,6 +4,13 @@ set -e
 
 echo "OK"
 
-groovy VocabGame.groovy words-en.txt 
+if [ -n "$1" ]; then
+MY_FILE=$1
+else
+  echo "usage: file required"
+  exit -1
+fi
+
+groovy VocabGame.groovy $MY_FILE
 
 echo "Ready."
