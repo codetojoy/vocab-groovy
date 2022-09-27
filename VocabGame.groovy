@@ -1,41 +1,63 @@
 
+final def random = new Random()
+final String TEST = "TEST"
+final int MODE_WORDS = 0
+
 def readDictionary = { filename ->
-    def map = [:]
+    def dict = [:]
     new File(filename).eachLine { line ->
         def tokens = line.split(':')
         
         if (tokens.length == 2) {
             def key = tokens[0].trim()
             def val = tokens[1].trim()
-            map[key] = val
+            dict[key] = val
         }
     }
 
-    return map
+    return dict
+}
+
+// given x,y return i in [x,y]
+def getRandom = { min, max ->
+    random.nextInt(min, max + 1)
 }
 
 def flipCoin = {
-    def time = System.currentTimeMillis() as String
-    def pick = time[-2] as int
-    ((pick % 2) == 0) ? 0 : 1
+    getRandom(0,1)
 }
+
+// test flipCoin
+def headCount = 0
+def tailCount = 0
+100.times { 
+    def result = flipCoin()
+    assert result >= 0 && result <= 1
+    if (result) {
+        headCount++
+    } else {
+        tailCount++
+    }
+}
+println "TRACER testFlipCoin h: ${headCount} t: ${tailCount}"
 
 def rollDice = {
-    def time = System.currentTimeMillis() as String
-    def result = (time[-1] as int) + 2
-    println "TRACER rollDice : ${result}"
-    return result
+    getRandom(1, 12)
 }
 
-def getInput = { message ->
-    def ok = false
+// test rollDice
+def rollDiceResult = new StringBuilder()
+10.times { 
+    def x = rollDice()
+    assert x >= 1 && x <= 12
+    rollDiceResult += " " + x
+}
+println "TRACER testRollDice r: ${rollDiceResult}"
+
+def detectInput = { message ->
+    println message
     def scanner = new java.util.Scanner(System.in)
-    
-    while (!ok) {
-        println message
-        String response = scanner.next()
-        ok = true
-    }
+    def response = scanner.next()
 }
 
 LinkedHashMap.metaClass.safeGet = { target ->
@@ -53,12 +75,12 @@ def turn = { dictionary, items ->
         message.append " - ${dictionary.safeGet(hint)}\n" 
     }
         
-    getInput message.toString()
+    detectInput message.toString()
     println "A: ${dictionary.safeGet(item)}"
 }
 
-def playGame = { dictionary, coinFlip ->
-    if (0 == (coinFlip as int)) {
+def playGame = { dictionary, mode ->
+    if (MODE_WORDS == mode) {
         def words = dictionary.keySet() as List
         turn(dictionary, words)
     } else {
@@ -70,25 +92,15 @@ def playGame = { dictionary, coinFlip ->
 // ---------- main
 
 def file = args[0]
+if (file == TEST) { System.exit(0) }
 assert new File(file).exists()
 
 def dictionary = readDictionary(file)
 
-/*
-def x = flipCoin()
-
-if (args != null && args.length != 0) {
-    x = args[0]
-} 
-*/ 
-
 def numGames = 6
 
 numGames.times { 
-    def x = flipCoin()
-    playGame(dictionary, x)
+    def mode = flipCoin()
+    playGame(dictionary, mode)
 }
-
-// try { Thread.sleep(800) } catch (Exception ex) {} 
-
 
